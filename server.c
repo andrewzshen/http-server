@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
     memset(&server_addr.sin_zero, 0, sizeof(server_addr.sin_zero));
 
     if(bind(server_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) == -1) {
-        perror("Binding failed.");
+        perror("Bind failed.");
         close(server_fd);
         return 1;
     }
@@ -52,18 +52,18 @@ int main(int argc, char **argv) {
     int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
 
     if(client_fd == -1) {
-        perror("Accept");
+        perror("Accept failed.");
         close(server_fd);
         return 1;
     }
 
     printf("Client connected.\n");
 
-    char* message = "Hello\n";
-    send(client_fd, message, sizeof(message), 0);
+    char *message = "Hello client\n";
+    send(client_fd, message, strlen(message), 0);
 
     close(client_fd);
     close(server_fd);
-    
+
     return 0;
 }   
