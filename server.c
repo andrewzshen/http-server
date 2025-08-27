@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
-#include <sys/socket.h>
+#include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 
 #define PORT_NUMBER 6969
+#define IP_ADDRESS "127.0.0.1"
 
 int main(int argc, char **argv) {
     int server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -19,8 +20,8 @@ int main(int argc, char **argv) {
     }
 
     int opt = 1;
-    if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-        perror("SO_REUSEPORT failed.");
+    if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) == -1) {
+        perror("Set SO_REUSEADDR failed.");
         close(server_fd);
         return 1;
     }
@@ -28,7 +29,7 @@ int main(int argc, char **argv) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT_NUMBER);
-    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+    inet_pton(AF_INET, IP_ADDRESS, &server_addr.sin_addr);
     memset(&server_addr.sin_zero, 0, sizeof(server_addr.sin_zero));
 
     if(bind(server_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) == -1) {
@@ -59,8 +60,15 @@ int main(int argc, char **argv) {
 
     printf("Client connected.\n");
 
-    char *message = "Hello client\n";
-    send(client_fd, message, strlen(message), 0);
+    char *message = "Hello client!\n";
+    ssize_t bytes_sent = send(client_fd, message, strlen(message), 0);
+
+    if(bytes_sent == -1) {
+        perror("Send failed.");
+        close(client_fd);
+        close(server_fd);
+        return 1;
+    }
 
     close(client_fd);
     close(server_fd);
