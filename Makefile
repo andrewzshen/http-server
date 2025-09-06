@@ -1,3 +1,5 @@
+all: server client
+
 server:
 	gcc server.c -o server.o
 
