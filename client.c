@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
 
     if(client_socket == -1) {
         perror("Socket creation failed");
-        exit(errno);
+        exit(EXIT_FAILURE);
     }
 
     struct sockaddr_in server_addr;
@@ -28,36 +28,34 @@ int main(int argc, char **argv) {
     if(connect(client_socket, (struct sockaddr *) &server_addr, sizeof(server_addr)) == -1) {
         perror("Connect failed");
         close(client_socket);
-        exit(errno);
+        exit(EXIT_FAILURE);
     }
 
-    printf("Connected to server. Input messages:\n");
+    printf("Connected to server. Ready to receive messages:\n");
 
-    char buffer[1024];
-    ssize_t bytes_sent;
+    char message_buffer[1024];
 
-    while(fgets(buffer, sizeof(buffer), stdin) != NULL) {
-        size_t newline_index = strcspn(buffer, "\n");
-        buffer[newline_index] = 0;
+    while(fgets(message_buffer, sizeof(message_buffer), stdin) != NULL) {
+        size_t newline_index = strcspn(message_buffer, "\n");
+        message_buffer[newline_index] = '\0';
 
-        printf("Message length in bytes (excluding newline): %d\n", strlen(buffer));
-        bytes_sent = send(client_socket, buffer, strlen(buffer), 0);
+        ssize_t bytes_sent = send(client_socket, message_buffer, strlen(message_buffer), 0);
 
         if(bytes_sent == -1) {
-            perror("Send error.");
+            perror("Send error");
             close(client_socket);
-            exit(errno);
+            exit(EXIT_FAILURE);
         }
 
-        ssize_t bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);  
+        ssize_t bytes_received = recv(client_socket, message_buffer, sizeof(message_buffer), 0);  
 
         if(bytes_received == -1) {
             perror("Receive failed");
             close(client_socket);
-            exit(errno);
+            exit(EXIT_FAILURE);
         } 
 
-        printf("%.*s\n", bytes_received, buffer);
+        printf("%.*s\n", bytes_received, message_buffer);
     }
 
     close(client_socket);
